@@ -1,0 +1,85 @@
+server:
+  port: 8081
+
+# Mysql数据库连接配置: com.mysql.cj.jdbc.Driver
+spring:
+  application:
+    name: stefanie-service-order
+  datasource:
+    url: jdbc:mysql://49.232.146.162:3306/natsume?characterEncoding=utf-8&serverTimezone=UTC&useSSL=false
+    username: root
+    password: U2FsdGVkX18kY9pA6bwGYP/4xavO576XOCjgKjQbL48=
+    driver-class-name: com.mysql.jdbc.Driver
+  flyway:
+    enabled: false
+  redis:
+    host: 123.207.218.247
+    port: 6379
+    password: password
+  rabbitmq:
+    addresses: 123.207.218.247
+    port: 5672
+    username: guest
+    password: guest
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 123.207.218.247:8848
+    sentinel:
+      transport:
+        dashboard: 123.207.218.247:8080 # sentinel dashboard/console 地址
+        port: 8719   #  sentinel会在该端口启动http server，那么这样的话，控制台定义的一些限流等规则才能发送传递过来，
+        #如果8719端口被占用，那么会依次+1
+      # Sentinel Nacos数据源配置，Nacos中的规则会自动同步到sentinel流控规则中
+      datasource:
+        # 自定义的流控规则数据源名称
+        flow:
+          nacos:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            data-id: ${spring.application.name}-flow-rules
+            groupId: DEFAULT_GROUP
+            data-type: json
+            rule-type: flow  # 类型来自RuleType类
+        # 自定义的降级规则数据源名称
+        degrade:
+          nacos:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            data-id: ${spring.application.name}-degrade-rules
+            groupId: DEFAULT_GROUP
+            data-type: json
+            rule-type: degrade  # 类型来自RuleType类
+  main:
+    allow-bean-definition-overriding: true
+
+# mybatis配置
+mybatis:
+  configuration:
+    #开启驼峰命名匹配映射
+    map-underscore-to-camel-case: true
+    # 控制台日志配置
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  #配置mybatis的xml映射配置文件路径
+#  mapper-locations: classpath:mapper/*.xml
+#  #配置mybatis映射配置文件中实体类别名
+#  type-aliases-package: com.natsumes.stefanie.pojo
+
+wx:
+  appId: wx4979619f65fe08f5
+  mchKey: 99a984c7045f09c7ac0d49a92598b5eb
+  openIdUrl: https://api.weixin.qq.com/sns/jscode2session
+
+# pagehelper 配置
+pagehelper:
+  auto-dialect: true
+  reasonable: true
+  support-methods-arguments: true
+  params: countSql
+  rowBoundsWithCount: true
+
+
+
+dubbo:
+  registry:
+    address: spring-cloud://localhost
+  cloud:
+    subscribed-services: stefanie-service-logistics, stefanie-service-user
