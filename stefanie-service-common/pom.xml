@@ -10,13 +10,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>stefanie-service-common</artifactId>
+	<name>stefanie-service-common</name>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 			<version>5.2.4</version>
-			<scope>dev</scope>
+			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>

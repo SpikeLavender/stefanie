@@ -5,7 +5,7 @@ import com.natsumes.stefanie.pojo.Shipping;
 import java.util.List;
 import java.util.Set;
 
-public interface ShippingApiService {
+public interface UserApiService {
 
     Shipping selectByUidAndShippingId(Integer uId, Integer shippingId);
 

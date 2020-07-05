@@ -1,8 +1,12 @@
 package com.natsumes.stefanie.pojo;
 
-import java.util.Date;
+import lombok.Data;
 
-public class Comment {
+import java.io.Serializable;
+import java.util.Date;
+@Data
+public class Comment implements Serializable {
+    private static final long serialVersionUID = -4963728529839957383L;
     private Integer id;
 
     private Integer userId;

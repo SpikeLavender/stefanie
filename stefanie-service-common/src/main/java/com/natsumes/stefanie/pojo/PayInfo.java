@@ -2,10 +2,12 @@ package com.natsumes.stefanie.pojo;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 @Data
-public class PayInfo {
+public class PayInfo implements Serializable {
+    private static final long serialVersionUID = 4046750372989852415L;
     private Integer id;
 
     private Integer userId;

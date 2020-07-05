@@ -1,9 +1,13 @@
 package com.natsumes.stefanie.pojo;
 
+import lombok.Data;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-
-public class OrderItem {
+@Data
+public class OrderItem implements Serializable {
+    private static final long serialVersionUID = -5925872013658604156L;
     private Integer id;
 
     private Integer userId;
@@ -25,92 +29,4 @@ public class OrderItem {
     private Date createTime;
 
     private Date updateTime;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public String getOrderNo() {
-        return orderNo;
-    }
-
-    public void setOrderNo(String orderNo) {
-        this.orderNo = orderNo == null ? null : orderNo.trim();
-    }
-
-    public Integer getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName == null ? null : productName.trim();
-    }
-
-    public String getProductImage() {
-        return productImage;
-    }
-
-    public void setProductImage(String productImage) {
-        this.productImage = productImage == null ? null : productImage.trim();
-    }
-
-    public BigDecimal getCurrentUnitPrice() {
-        return currentUnitPrice;
-    }
-
-    public void setCurrentUnitPrice(BigDecimal currentUnitPrice) {
-        this.currentUnitPrice = currentUnitPrice;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
 }

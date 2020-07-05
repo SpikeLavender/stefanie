@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/stefanie.iml" filepath="$PROJECT_DIR$/stefanie.iml" />
+      <module fileurl="file://$PROJECT_DIR$/stefanie-cloud-gateway-server/stefanie-cloud-gateway-server.iml" filepath="$PROJECT_DIR$/stefanie-cloud-gateway-server/stefanie-cloud-gateway-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/stefanie-service-common/stefanie-service-common.iml" filepath="$PROJECT_DIR$/stefanie-service-common/stefanie-service-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/stefanie-service-dubbo-api/stefanie-service-dubbo-api.iml" filepath="$PROJECT_DIR$/stefanie-service-dubbo-api/stefanie-service-dubbo-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/stefanie-service-logistics/stefanie-service-logistics.iml" filepath="$PROJECT_DIR$/stefanie-service-logistics/stefanie-service-logistics.iml" />

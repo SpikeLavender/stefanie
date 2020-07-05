@@ -7,18 +7,17 @@ import com.natsumes.stefanie.entity.form.ShippingForm;
 import com.natsumes.stefanie.enums.ResponseEnum;
 import com.natsumes.stefanie.mapper.ShippingMapper;
 import com.natsumes.stefanie.pojo.Shipping;
-import com.natsumes.stefanie.service.ShippingApiService;
 import com.natsumes.stefanie.service.ShippingService;
-import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 @Service
-public class ShippingServiceImpl implements ShippingService, ShippingApiService {
+public class ShippingServiceImpl implements ShippingService {
 
     @Autowired
     private ShippingMapper shippingMapper;
@@ -92,20 +91,5 @@ public class ShippingServiceImpl implements ShippingService, ShippingApiService 
         List<Shipping> shippings = shippingMapper.selectByUid(uId);
         PageInfo<Shipping> pageInfo = new PageInfo<>(shippings);
         return Response.success(pageInfo);
-    }
-
-    @Override
-    public Shipping selectByUidAndShippingId(Integer uId, Integer shippingId) {
-        return shippingMapper.selectByUidAndShippingId(uId, shippingId);
-    }
-
-    @Override
-    public List<Shipping> selectShippingByIdSet(Set<Integer> shippingIdSet) {
-        return shippingMapper.selectByIdSet(shippingIdSet);
-    }
-
-    @Override
-    public Shipping selectByPrimaryKey(Integer shippingId) {
-        return shippingMapper.selectByPrimaryKey(shippingId);
     }
 }

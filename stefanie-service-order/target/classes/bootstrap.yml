@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8084
 
 # Mysql数据库连接配置: com.mysql.cj.jdbc.Driver
 spring:
@@ -24,10 +24,16 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 123.207.218.247:8848
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        # 锁定server端的配置文件（读取它的配置项）
+        namespace: 7b456865-351d-404d-abef-fe7fc52a5e6b  # 命名空间id
+        group: DEFAULT_GROUP  # 默认分组就是DEFAULT_GROUP，如果使用默认分组可以不配置
+        file-extension: yaml   #默认properties
     sentinel:
       transport:
-        dashboard: 123.207.218.247:8080 # sentinel dashboard/console 地址
+        dashboard: 127.0.0.1:8080 # sentinel dashboard/console 地址
         port: 8719   #  sentinel会在该端口启动http server，那么这样的话，控制台定义的一些限流等规则才能发送传递过来，
         #如果8719端口被占用，那么会依次+1
       # Sentinel Nacos数据源配置，Nacos中的规则会自动同步到sentinel流控规则中
@@ -59,9 +65,9 @@ mybatis:
     # 控制台日志配置
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   #配置mybatis的xml映射配置文件路径
-#  mapper-locations: classpath:mapper/*.xml
-#  #配置mybatis映射配置文件中实体类别名
-#  type-aliases-package: com.natsumes.stefanie.pojo
+  mapper-locations: classpath:mapper/*.xml
+  #配置mybatis映射配置文件中实体类别名
+  type-aliases-package: com.natsumes.stefanie.pojo
 
 wx:
   appId: wx4979619f65fe08f5

@@ -11,7 +11,6 @@ import com.natsumes.stefanie.service.CategoryService;
 import com.natsumes.stefanie.entity.Response;
 import com.natsumes.stefanie.entity.vo.ProductDetailVo;
 import com.natsumes.stefanie.entity.vo.ProductVo;
-import com.natsumes.stefanie.service.LogisticsService;
 import com.natsumes.stefanie.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ProductServiceImpl implements ProductService, LogisticsService {
+public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private CategoryService categoryService;
@@ -97,20 +96,5 @@ public class ProductServiceImpl implements ProductService, LogisticsService {
                 .collect(Collectors.toList());
         pageInfo.setList(productVos);
         return Response.success(pageInfo);
-    }
-
-    @Override
-    public Product selectProductById(Integer productId) {
-        return productMapper.selectByPrimaryKey(productId);
-    }
-
-    @Override
-    public List<Product> selectByProductIdSet(Set<Integer> productIdSet) {
-        return productMapper.selectByProductIdSet(productIdSet);
-    }
-
-    @Override
-    public int updateProduct(Product product) {
-        return productMapper.updateByPrimaryKeySelective(product);
     }
 }

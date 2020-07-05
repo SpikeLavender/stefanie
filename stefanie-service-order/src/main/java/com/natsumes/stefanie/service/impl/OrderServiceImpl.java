@@ -20,7 +20,7 @@ import com.natsumes.stefanie.pojo.Shipping;
 import com.natsumes.stefanie.service.CartService;
 import com.natsumes.stefanie.service.LogisticsService;
 import com.natsumes.stefanie.service.OrderService;
-import com.natsumes.stefanie.service.ShippingApiService;
+import com.natsumes.stefanie.service.UserApiService;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ import static com.natsumes.stefanie.enums.ResponseEnum.CART_SELECTED_IS_EMPTY;
 public class OrderServiceImpl implements OrderService {
 
 	@Reference
-	private ShippingApiService shippingApiService;
+	private UserApiService userApiService;
 
 	@Autowired
 	private CartService cartService;
@@ -65,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Response<OrderVo> create(Integer uId, Integer productId, Integer productNum, Integer shippingId) {
         //收货地址校验（总之要查出来）
-        Shipping shipping = shippingApiService.selectByUidAndShippingId(uId, shippingId);
+        Shipping shipping = userApiService.selectByUidAndShippingId(uId, shippingId);
         if (shipping == null) {
             return Response.error(ResponseEnum.SHIPPING_NOT_EXIST);
         }
@@ -124,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	public Response<OrderVo> create(Integer uId, Integer shippingId) {
 		//收货地址校验（总之要查出来）
-		Shipping shipping = shippingApiService.selectByUidAndShippingId(uId, shippingId);
+		Shipping shipping = userApiService.selectByUidAndShippingId(uId, shippingId);
 		if (shipping == null) {
 			return Response.error(ResponseEnum.SHIPPING_NOT_EXIST);
 		}
@@ -211,7 +211,7 @@ public class OrderServiceImpl implements OrderService {
 				.collect(Collectors.groupingBy(OrderItem::getOrderNo));
 
 		Set<Integer> shippingIdSet = orders.stream().map(Order::getShippingId).collect(Collectors.toSet());
-		List<Shipping> shippings = shippingApiService.selectShippingByIdSet(shippingIdSet);
+		List<Shipping> shippings = userApiService.selectShippingByIdSet(shippingIdSet);
 		Map<Integer, Shipping> shippingMap = shippings.stream()
 				.collect(Collectors.toMap(Shipping::getId, shipping -> shipping));
 
@@ -239,7 +239,7 @@ public class OrderServiceImpl implements OrderService {
 		orderNoSet.add(order.getOrderNo());
 		List<OrderItem> orderItems = orderItemMapper.selectByOrderNoSet(orderNoSet);
 
-		Shipping shipping = shippingApiService.selectByPrimaryKey(order.getShippingId());
+		Shipping shipping = userApiService.selectByPrimaryKey(order.getShippingId());
 
 		OrderVo orderVo = buildOrderVo(order, orderItems, shipping);
 		return Response.success(orderVo);
