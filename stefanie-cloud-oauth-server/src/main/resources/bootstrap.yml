@@ -1,0 +1,50 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: stefanie-cloud-oauth
+  datasource:
+    url: jdbc:mysql://49.232.146.162:3306/oauth2?characterEncoding=utf-8&serverTimezone=UTC&useSSL=false
+    username: root
+    password: U2FsdGVkX18kY9pA6bwGYP/4xavO576XOCjgKjQbL48=
+    driver-class-name: com.mysql.jdbc.Driver
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      discovery:
+        #server-addr: 123.207.218.247:8848
+        server-addr: 127.0.0.1:8848
+#        namespace: 7b456865-351d-404d-abef-fe7fc52a5e6b
+      # nacos config 配置
+      config:
+        server-addr: 127.0.0.1:8848
+        # 锁定server端的配置文件（读取它的配置项）
+        namespace: 7b456865-351d-404d-abef-fe7fc52a5e6b  # 命名空间id
+        group: DEFAULT_GROUP  # 默认分组就是DEFAULT_GROUP，如果使用默认分组可以不配置
+        file-extension: yaml   #默认properties
+        # 根据规则拼接出来的dataId效果：stefanie-service-octopus.yaml
+#        ext-config[0]:
+#          data-id: stefanie-service.yaml
+#          group: DEFAULT_GROUP
+#          refresh: true  #开启扩展dataId的动态刷新
+
+# 健康检查
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+
+sign_key: 12345678
+
+dubbo:
+  registry:
+    address: spring-cloud://localhost
+  cloud:
+    subscribed-services: stefanie-service-user

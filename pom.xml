@@ -24,8 +24,9 @@
 		<module>stefanie-service-pay</module>
 		<module>stefanie-service-logistics</module>
 		<module>stefanie-service-order</module>
-		<module>stefanie-service-user</module>
+		<module>stefanie-service-users</module>
 		<module>stefanie-service-dubbo-api</module>
+		<module>stefanie-cloud-oauth-server</module>
 	</modules>
 
 

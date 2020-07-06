@@ -45,3 +45,13 @@ spring:
             - Path=/orders/**
           filters:
             - StripPrefix=1
+        - id: service-octopus-router
+          uri: lb://stefanie-service-octopus
+          predicates:
+            - Path=/customer/**
+        - id: cloud-oauth-router
+          uri: lb://stefanie-cloud-oauth
+          predicates:
+            - Path=/oauth/token/**
+
+sign_key: 12345678
