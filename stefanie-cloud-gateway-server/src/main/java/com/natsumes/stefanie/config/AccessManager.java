@@ -39,7 +39,7 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
 //            return Mono.just(new AuthorizationDecision(false));
 //        }
 
-
+        //登陆接口的话，加一个返回用户信息
 
         String requestPath = exchange.getRequest().getURI().getPath();
         if (permitAll(requestPath)) {
