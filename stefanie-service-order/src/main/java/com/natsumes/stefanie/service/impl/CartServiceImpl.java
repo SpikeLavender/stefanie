@@ -11,7 +11,7 @@ import com.natsumes.stefanie.enums.ProductStatusEnum;
 import com.natsumes.stefanie.enums.ResponseEnum;
 import com.natsumes.stefanie.pojo.Product;
 import com.natsumes.stefanie.service.CartService;
-import com.natsumes.stefanie.service.LogisticsService;
+import com.natsumes.stefanie.service.DubboProductService;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
@@ -33,7 +33,7 @@ import static com.natsumes.stefanie.consts.StefanieConst.CART_REDIS_KEY_TEMPLATE
 public class CartServiceImpl implements CartService {
 
     @Reference
-    private LogisticsService logisticsService;
+    private DubboProductService dubboProductService;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -43,7 +43,7 @@ public class CartServiceImpl implements CartService {
 
         Integer quantity = form.getQuantity();
 
-        Product product = logisticsService.selectProductById(form.getProductId());
+        Product product = dubboProductService.selectByPrimaryKey(form.getProductId());
 
         //判断商品是否存在
         if (product == null) {
@@ -94,7 +94,7 @@ public class CartServiceImpl implements CartService {
 
         Set<Integer> productIdSet = entries.keySet().stream().map(Integer::valueOf).collect(Collectors.toSet());
 
-        List<Product> products = logisticsService.selectByProductIdSet(productIdSet);
+        List<Product> products = dubboProductService.selectByProductIdSet(productIdSet);
 
         Map<Integer, Product> productMap = products.stream()
                 .collect(Collectors.toMap(Product::getId, product -> product));
@@ -229,15 +229,6 @@ public class CartServiceImpl implements CartService {
 
         return list(uId);
     }
-
-//	//item
-//	@Override
-//	public ResponseVo<Integer> sum(Integer uId) {
-//		Integer sum = listForCart(uId).stream()
-//				.map(Cart::getQuantity)
-//				.reduce(0, Integer::sum);
-//		return ResponseVo.success(sum);
-//	}
 
     //item
     @Override

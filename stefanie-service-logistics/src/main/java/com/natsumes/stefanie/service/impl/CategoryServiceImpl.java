@@ -1,12 +1,12 @@
 package com.natsumes.stefanie.service.impl;
 
-import com.natsumes.stefanie.mapper.CategoryMapper;
 import com.natsumes.stefanie.pojo.Category;
 import com.natsumes.stefanie.service.CategoryService;
 import com.natsumes.stefanie.entity.Response;
 import com.natsumes.stefanie.entity.vo.CategoryVo;
+import com.natsumes.stefanie.service.DubboCategoryService;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,8 +20,8 @@ import static com.natsumes.stefanie.consts.StefanieConst.ROOT_CATEGORY_PARENT_ID
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
-    @Autowired
-    private CategoryMapper categoryMapper;
+    @Reference
+    private DubboCategoryService dubboCategoryService;
 
     /**
      * 耗时: http（请求微信API） > 磁盘 > 内存
@@ -29,7 +29,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public Response<List<CategoryVo>> selectAll() {
-        List<Category> categories = categoryMapper.selectAll();
+        List<Category> categories = dubboCategoryService.selectAll();
 
         //查出parent_id=0
         // lambda + stream
@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void findSubCategoryId(Integer id, Set<Integer> resultSet) {
-        List<Category> categories = categoryMapper.selectAll();
+        List<Category> categories = dubboCategoryService.selectAll();
         findSubCategoryId(id, resultSet, categories);
     }
 

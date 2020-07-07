@@ -6,10 +6,11 @@ import com.natsumes.stefanie.entity.Response;
 import com.natsumes.stefanie.entity.form.WeChartForm;
 import com.natsumes.stefanie.enums.ResponseEnum;
 import com.natsumes.stefanie.enums.RoleEnum;
-import com.natsumes.stefanie.mapper.UserMapper;
 import com.natsumes.stefanie.pojo.Users;
+import com.natsumes.stefanie.service.DubboUsersService;
 import com.natsumes.stefanie.service.UserService;
 import com.natsumes.stefanie.utils.JSONUtils;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,8 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserMapper userMapper;
+    @Reference
+    private DubboUsersService dubboUsersService;
 
     @Autowired
     private WxConfig wxConfig;
@@ -36,7 +37,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Response<Users> register(Users users) {
         //username 不能重复
-        int countByUsername = userMapper.countByUsername(users.getUsername());
+        int countByUsername = dubboUsersService.countByUsername(users.getUsername());
         if (countByUsername > 0) {
             return Response.error(ResponseEnum.USERNAME_EXIST);
         }
@@ -51,7 +52,7 @@ public class UserServiceImpl implements UserService {
         if (users.getParentId() == null) {
             users.setParentId(0);
         }
-        if (users.getParentId() != 0 && userMapper.countById(users.getParentId()) <= 0) {
+        if (users.getParentId() != 0 && dubboUsersService.countById(users.getParentId()) <= 0) {
             //todo: 设置为0，是否需要提示异常待定
             return Response.error(ResponseEnum.PARENT_NO_EXIST, "上级ID错误，请确认并重新填写");
         }
@@ -61,7 +62,7 @@ public class UserServiceImpl implements UserService {
         users.setPassword(DigestUtils.md5DigestAsHex(users.getPassword().getBytes(StandardCharsets.UTF_8)));
 
         //写入数据库
-        int resultCount = userMapper.insertSelective(users);
+        int resultCount = dubboUsersService.insertSelective(users);
         if (resultCount == 0) {
             return Response.error(ResponseEnum.SYSTEM_ERROR, "写入数据库异常, 注册失败");
         }
@@ -72,7 +73,7 @@ public class UserServiceImpl implements UserService {
     //todo: session保存在内存里, 改进版本: token+redis
     @Override
     public Response<Users> login(String username, String password) {
-        Users users = userMapper.selectByUsername(username);
+        Users users = dubboUsersService.selectByUsername(username);
         if (users == null) {
             //用户不存在(返回: 用户名或密码错误)
             return Response.error(ResponseEnum.USERNAME_OR_PASSWORD_ERROR);
@@ -108,7 +109,7 @@ public class UserServiceImpl implements UserService {
         String openId = responseBody.getString("openid");
         String sessionKey = responseBody.getString("session_key");
 
-        Users users = userMapper.selectByOpenid(openId); //openId为用户的username
+        Users users = dubboUsersService.selectByOpenid(openId); //openId为用户的username
         if (users == null) {
             //用户不存在(返回: 用户名或密码错误) , 自动注册
             users = new Users();
@@ -121,7 +122,7 @@ public class UserServiceImpl implements UserService {
             users.setOpenid(openId);
 
             //写入数据库
-            int resultCount = userMapper.insertSelective(users);
+            int resultCount = dubboUsersService.insertSelective(users);
             if (resultCount == 0) {
                 return Response.error(ResponseEnum.SYSTEM_ERROR, "写入数据库异常, 注册失败");
             }
@@ -129,7 +130,7 @@ public class UserServiceImpl implements UserService {
             //更新sessionKey
             users.setPassword(sessionKey);
             users.setUsername(weChartForm.getUsername());
-            userMapper.updateByPrimaryKey(users);
+            dubboUsersService.updateByPrimaryKey(users);
         }
         return Response.success(users);
     }
@@ -141,7 +142,7 @@ public class UserServiceImpl implements UserService {
         }
 
         //判断此用户是否绑定不为0的父Id
-        Users user = userMapper.selectByPrimaryKey(uid);
+        Users user = dubboUsersService.selectByPrimaryKey(uid);
         //已绑定，直接返回已绑定
         if (user.getParentId() != 0) {
             return Response.error(ResponseEnum.PARENT_HAS_EXIST);
@@ -149,12 +150,12 @@ public class UserServiceImpl implements UserService {
 
         //未绑定
         // 去查parentId是不是不为0且不存在数据库中
-        if (userMapper.countById(parentId) <= 0) {
+        if (dubboUsersService.countById(parentId) <= 0) {
             // 是，返回，此父Id错误
             return Response.error(ResponseEnum.PARENT_NO_EXIST);
         }
         // 去查parentId是不是不为此用户的子Id
-        List<Users> users = userMapper.selectAll();
+        List<Users> users = dubboUsersService.selectAll();
         if (isSubId(users, uid, parentId)) {
             // 是，返回，此ID是你的下级，不能绑定
             return Response.error(ResponseEnum.PARENT_IS_NOT_VALID);
@@ -162,7 +163,7 @@ public class UserServiceImpl implements UserService {
 
         //否，绑定，0 -> 绑定0
         user.setParentId(parentId);
-        int i = userMapper.updateByPrimaryKeySelective(user);
+        int i = dubboUsersService.updateByPrimaryKeySelective(user);
         if (i <= 0) {
             return Response.error(ResponseEnum.SYSTEM_ERROR);
         }

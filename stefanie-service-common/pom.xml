@@ -12,25 +12,4 @@
 	<artifactId>stefanie-service-common</artifactId>
 	<name>stefanie-service-common</name>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-			<version>5.2.4</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.mybatis.generator</groupId>
-				<artifactId>mybatis-generator-maven-plugin</artifactId>
-				<version>1.4.0</version>
-				<configuration>
-					<overwrite>true</overwrite>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

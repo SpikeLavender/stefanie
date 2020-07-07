@@ -28,7 +28,6 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
     public AccessManager() {
         permitAll.add("/");
         //oauth2服务器
-        log.info("requestPath=-------------------------------------------------");
         permitAll.add("/**/oauth/**");
     }
 

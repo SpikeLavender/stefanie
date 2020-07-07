@@ -16,13 +16,13 @@ public class Achievement implements Serializable {
 
     private Integer level;
 
-    private BigDecimal profit;
+    private BigDecimal profit = BigDecimal.ZERO;
 
-    private BigDecimal achievement;
+    private BigDecimal achievement = BigDecimal.ZERO;
 
-    private BigDecimal selfAchievement;
+    private BigDecimal selfAchievement = BigDecimal.ZERO;
 
-    private BigDecimal subAchievement;
+    private BigDecimal subAchievement = BigDecimal.ZERO;
 
     private Date startTime;
 
