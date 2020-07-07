@@ -5,14 +5,15 @@ import com.github.pagehelper.PageInfo;
 import com.natsumes.stefanie.enums.ProductStatusEnum;
 import com.natsumes.stefanie.entity.form.SearchForm;
 import com.natsumes.stefanie.enums.ResponseEnum;
-import com.natsumes.stefanie.mapper.ProductMapper;
 import com.natsumes.stefanie.pojo.Product;
 import com.natsumes.stefanie.service.CategoryService;
 import com.natsumes.stefanie.entity.Response;
 import com.natsumes.stefanie.entity.vo.ProductDetailVo;
 import com.natsumes.stefanie.entity.vo.ProductVo;
+import com.natsumes.stefanie.service.DubboProductService;
 import com.natsumes.stefanie.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,8 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private CategoryService categoryService;
 
-    @Autowired
-    private ProductMapper productMapper;
+    @Reference
+    private DubboProductService dubboProductService;
 
     @Override
     public Response<PageInfo> list(Integer categoryId, Integer pageNum, Integer pageSize) {
@@ -43,13 +44,13 @@ public class ProductServiceImpl implements ProductService {
         }
 
         PageHelper.startPage(pageNum, pageSize);
-        List<Product> products = productMapper.selectByCategoryIdSet(categoryIdSet);
+        List<Product> products = dubboProductService.selectByCategoryIdSet(categoryIdSet);
         return getPageInfoResponseVo(products);
     }
 
     @Override
     public Response<ProductDetailVo> detail(Integer productId) {
-        Product product = productMapper.selectByPrimaryKey(productId);
+        Product product = dubboProductService.selectByPrimaryKey(productId);
 
         if (product == null) {
             return Response.error(ResponseEnum.PRODUCT_NOT_EXIST);
@@ -80,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         PageHelper.startPage(pageNum, pageSize);
-        List<Product> products = productMapper.selectSelective(categoryIdSet, searchForm);
+        List<Product> products = dubboProductService.selectSelective(categoryIdSet, searchForm);
         return getPageInfoResponseVo(products);
     }
 

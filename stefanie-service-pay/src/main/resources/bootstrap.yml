@@ -7,11 +7,7 @@ spring:
     enabled: false
   application:
     name: stefanie-service-pay
-  datasource:
-    url: jdbc:mysql://49.232.146.162:3306/natsume?characterEncoding=utf-8&serverTimezone=UTC&useSSL=false
-    username: root
-    password: U2FsdGVkX18kY9pA6bwGYP/4xavO576XOCjgKjQbL48=
-    driver-class-name: com.mysql.jdbc.Driver
+
   rabbitmq:
     addresses: 123.207.218.247
     port: 5672
@@ -56,4 +52,12 @@ management:
     web:
       exposure:
         include: "*"
+  endpoint:
+    health:
+      show-details: always
 
+dubbo:
+  registry:
+    address: spring-cloud://localhost
+  cloud:
+    subscribed-services: stefanie-db-adpter

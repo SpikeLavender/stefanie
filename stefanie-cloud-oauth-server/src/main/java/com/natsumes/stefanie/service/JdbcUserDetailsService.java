@@ -18,12 +18,12 @@ public class JdbcUserDetailsService implements UserDetailsService {
     //调用用户接口去验证
 
     @Reference
-    private UserApiService userApiService;
+    private DubboUsersService dubboUsersService;
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
 
-        Users users = userApiService.selectByUsername(s);
+        Users users = dubboUsersService.selectByUsername(s);
         log.info("ssssssssss{}", users.getUsername());
 
         return new User(users.getUsername(), users.getPassword(), new ArrayList<>());

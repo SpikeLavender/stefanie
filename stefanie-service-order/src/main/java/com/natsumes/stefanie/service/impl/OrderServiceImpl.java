@@ -11,16 +11,11 @@ import com.natsumes.stefanie.enums.OrderStatusEnum;
 import com.natsumes.stefanie.enums.PaymentTypeEnum;
 import com.natsumes.stefanie.enums.ProductStatusEnum;
 import com.natsumes.stefanie.enums.ResponseEnum;
-import com.natsumes.stefanie.mapper.OrderItemMapper;
-import com.natsumes.stefanie.mapper.OrderMapper;
 import com.natsumes.stefanie.pojo.Order;
 import com.natsumes.stefanie.pojo.OrderItem;
 import com.natsumes.stefanie.pojo.Product;
 import com.natsumes.stefanie.pojo.Shipping;
-import com.natsumes.stefanie.service.CartService;
-import com.natsumes.stefanie.service.LogisticsService;
-import com.natsumes.stefanie.service.OrderService;
-import com.natsumes.stefanie.service.UserApiService;
+import com.natsumes.stefanie.service.*;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,19 +34,19 @@ import static com.natsumes.stefanie.enums.ResponseEnum.CART_SELECTED_IS_EMPTY;
 public class OrderServiceImpl implements OrderService {
 
 	@Reference
-	private UserApiService userApiService;
+	private DubboShippingService dubboShippingService;
 
 	@Autowired
 	private CartService cartService;
 
     @Reference
-    private LogisticsService logisticsService;
+    private DubboProductService dubboProductService;
 
-	@Autowired
-	private OrderMapper orderMapper;
+	@Reference
+	private DubboOrderService dubboOrderService;
 
-	@Autowired
-	private OrderItemMapper orderItemMapper;
+	@Reference
+	private DubboOrderItemService dubboOrderItemService;
 
     @Override
     public Response<OrderVo> create(Integer uId, OrderCreateForm orderCreateForm) {
@@ -65,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Response<OrderVo> create(Integer uId, Integer productId, Integer productNum, Integer shippingId) {
         //收货地址校验（总之要查出来）
-        Shipping shipping = userApiService.selectByUidAndShippingId(uId, shippingId);
+        Shipping shipping = dubboShippingService.selectByUidAndShippingId(uId, shippingId);
         if (shipping == null) {
             return Response.error(ResponseEnum.SHIPPING_NOT_EXIST);
         }
@@ -74,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
             return Response.error(ResponseEnum.SYSTEM_ERROR, "商品数量无效");
         }
         //根据productId查数据库
-        Product product = logisticsService.selectProductById(productId);
+        Product product = dubboProductService.selectByPrimaryKey(productId);
         //是否有商品
         if (product == null) {
             return Response.error(ResponseEnum.PRODUCT_NOT_EXIST, "商品不存在. productId = " + productId);
@@ -96,7 +91,7 @@ public class OrderServiceImpl implements OrderService {
 
         //减库存
         product.setStock(product.getStock() - productNum);
-        int row = logisticsService.updateProduct(product);
+        int row = dubboProductService.updateByPrimaryKeySelective(product);
         if (row <= 0) {
             return Response.error(ResponseEnum.SYSTEM_ERROR);
         }
@@ -105,12 +100,12 @@ public class OrderServiceImpl implements OrderService {
         //生成订单，入库：order 和 order_item，事务控制
         Order order = buildOrder(uId, orderNo, shippingId, orderItems);
         int rowForOrder;
-        rowForOrder = orderMapper.insertSelective(order);
+        rowForOrder = dubboOrderService.insertSelective(order);
         if (rowForOrder <= 0 ) {
             return Response.error(ResponseEnum.SYSTEM_ERROR);
         }
 
-        int rowOrderItem = orderItemMapper.batchInsert(orderItems);
+        int rowOrderItem = dubboOrderItemService.batchInsert(orderItems);
         if (rowOrderItem <= 0 ) {
             return Response.error(ResponseEnum.SYSTEM_ERROR);
         }
@@ -124,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	public Response<OrderVo> create(Integer uId, Integer shippingId) {
 		//收货地址校验（总之要查出来）
-		Shipping shipping = userApiService.selectByUidAndShippingId(uId, shippingId);
+		Shipping shipping = dubboShippingService.selectByUidAndShippingId(uId, shippingId);
 		if (shipping == null) {
 			return Response.error(ResponseEnum.SHIPPING_NOT_EXIST);
 		}
@@ -139,7 +134,7 @@ public class OrderServiceImpl implements OrderService {
 
 		//获取carts里的 productIds
 		Set<Integer> productIdSet = carts.stream().map(Cart::getProductId).collect(Collectors.toSet());
-		List<Product> products = logisticsService.selectByProductIdSet(productIdSet);
+		List<Product> products = dubboProductService.selectByProductIdSet(productIdSet);
 		Map<Integer, Product> map = products.stream()
 				.collect(Collectors.toMap(Product::getId, product -> product));
 
@@ -167,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
 
 			//减库存
 			product.setStock(product.getStock() - cart.getQuantity());
-			int row = logisticsService.updateProduct(product);
+			int row = dubboProductService.updateByPrimaryKeySelective(product);
 			if (row <= 0) {
 				return Response.error(ResponseEnum.SYSTEM_ERROR);
 			}
@@ -176,13 +171,13 @@ public class OrderServiceImpl implements OrderService {
 		//计算总价，只计算被选中的商品
 		//生成订单，入库：order 和 order_item，事务控制
 		Order order = buildOrder(uId, orderNo, shippingId, orderItems);
-		int rowForOrder = orderMapper.insertSelective(order);
+		int rowForOrder = dubboOrderService.insertSelective(order);
 
 		if (rowForOrder <= 0 ) {
 			return Response.error(ResponseEnum.SYSTEM_ERROR);
 		}
 
-		int rowForOrderItem = orderItemMapper.batchInsert(orderItems);
+		int rowForOrderItem = dubboOrderItemService.batchInsert(orderItems);
 		if (rowForOrderItem <= 0 ) {
 			return Response.error(ResponseEnum.SYSTEM_ERROR);
 		}
@@ -202,16 +197,16 @@ public class OrderServiceImpl implements OrderService {
     @SuppressWarnings("unchecked")
 	public Response<PageInfo> list(Integer uId, Integer pageNum, Integer pageSize) {
 		PageHelper.startPage(pageNum, pageSize);
-		List<Order> orders = orderMapper.selectByUid(uId);
+		List<Order> orders = dubboOrderService.selectByUid(uId);
         PageInfo pageInfo = new PageInfo<>(orders);
 
 		Set<String> orderNoSet = orders.stream().map(Order::getOrderNo).collect(Collectors.toSet());
-		List<OrderItem> orderItems = orderItemMapper.selectByOrderNoSet(orderNoSet);
+		List<OrderItem> orderItems = dubboOrderItemService.selectByOrderNoSet(orderNoSet);
 		Map<String, List<OrderItem>> orderItemMap = orderItems.stream()
 				.collect(Collectors.groupingBy(OrderItem::getOrderNo));
 
 		Set<Integer> shippingIdSet = orders.stream().map(Order::getShippingId).collect(Collectors.toSet());
-		List<Shipping> shippings = userApiService.selectShippingByIdSet(shippingIdSet);
+		List<Shipping> shippings = dubboShippingService.selectByIdSet(shippingIdSet);
 		Map<Integer, Shipping> shippingMap = shippings.stream()
 				.collect(Collectors.toMap(Shipping::getId, shipping -> shipping));
 
@@ -230,16 +225,16 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Response<OrderVo> detail(Integer uId, String orderNo) {
-		Order order = orderMapper.selectByOrderNo(orderNo);
+		Order order = dubboOrderService.selectByOrderNo(orderNo);
 		if (order == null || !order.getUserId().equals(uId)) {
 			return Response.error(ResponseEnum.ORDER_NOT_EXIST);
 		}
 
 		Set<String> orderNoSet = new HashSet<>();
 		orderNoSet.add(order.getOrderNo());
-		List<OrderItem> orderItems = orderItemMapper.selectByOrderNoSet(orderNoSet);
+		List<OrderItem> orderItems = dubboOrderItemService.selectByOrderNoSet(orderNoSet);
 
-		Shipping shipping = userApiService.selectByPrimaryKey(order.getShippingId());
+		Shipping shipping = dubboShippingService.selectByPrimaryKey(order.getShippingId());
 
 		OrderVo orderVo = buildOrderVo(order, orderItems, shipping);
 		return Response.success(orderVo);
@@ -247,7 +242,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Response cancel(Integer uId, String orderNo) {
-		Order order = orderMapper.selectByOrderNo(orderNo);
+		Order order = dubboOrderService.selectByOrderNo(orderNo);
 		if (order == null || !order.getUserId().equals(uId)) {
 			return Response.error(ResponseEnum.ORDER_NOT_EXIST);
 		}
@@ -259,7 +254,7 @@ public class OrderServiceImpl implements OrderService {
 
 		order.setStatus(OrderStatusEnum.CANCELED.getCode());
 		order.setCloseTime(new Date());
-		int row = orderMapper.updateByPrimaryKeySelective(order);
+		int row = dubboOrderService.updateByPrimaryKeySelective(order);
 		if (row <= 0) {
 			return Response.error(ResponseEnum.SYSTEM_ERROR);
 		}
@@ -268,7 +263,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public void paid(String orderNo) {
-		Order order = orderMapper.selectByOrderNo(orderNo);
+		Order order = dubboOrderService.selectByOrderNo(orderNo);
 		if (order == null) {
 			//todo 告警
 			throw new RuntimeException(ResponseEnum.ORDER_NOT_EXIST.getDesc() + ", 订单id: " + orderNo);
@@ -281,7 +276,7 @@ public class OrderServiceImpl implements OrderService {
 
 		order.setStatus(OrderStatusEnum.PAID.getCode());
 		order.setPaymentTime(new Date()); //todo payInfo 增加支付时间字段
-		int row = orderMapper.updateByPrimaryKeySelective(order);
+		int row = dubboOrderService.updateByPrimaryKeySelective(order);
 		if (row <= 0) {
 			throw new RuntimeException("将订单更新为已支付状态失败, 订单id: " + orderNo);
 		}

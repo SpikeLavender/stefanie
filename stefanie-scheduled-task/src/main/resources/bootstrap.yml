@@ -1,0 +1,49 @@
+# Mysql数据库连接配置: com.mysql.cj.jdbc.Driver
+server:
+  port: 8089
+
+spring:
+  application:
+    name: stefanie-scheduled-task
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        # 锁定server端的配置文件（读取它的配置项）
+        namespace: 7b456865-351d-404d-abef-fe7fc52a5e6b  # 命名空间id
+        group: DEFAULT_GROUP  # 默认分组就是DEFAULT_GROUP，如果使用默认分组可以不配置
+        file-extension: yaml   #默认properties
+
+  main:
+    allow-bean-definition-overriding: true
+
+# 健康检查
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+dubbo:
+  registry:
+    address: spring-cloud://localhost
+  cloud:
+    subscribed-services: stefanie-db-adpter
+  consumer:
+    timeout: 200000
+
+# 定时任务配置
+scheduled:
+  week:
+    fixedRate: 600000 # ms, 10 min
+    interval: 10
+    cron: "0 */30 * * * ?"  # 30 min
+  month:
+    fixedRate: 600000 # ms, 10 min
+    interval: 10
+    cron: "0 */30 * * * ?"  # 30 min

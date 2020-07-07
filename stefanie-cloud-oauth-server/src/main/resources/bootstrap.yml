@@ -24,11 +24,6 @@ spring:
         namespace: 7b456865-351d-404d-abef-fe7fc52a5e6b  # 命名空间id
         group: DEFAULT_GROUP  # 默认分组就是DEFAULT_GROUP，如果使用默认分组可以不配置
         file-extension: yaml   #默认properties
-        # 根据规则拼接出来的dataId效果：stefanie-service-octopus.yaml
-#        ext-config[0]:
-#          data-id: stefanie-service.yaml
-#          group: DEFAULT_GROUP
-#          refresh: true  #开启扩展dataId的动态刷新
 
 # 健康检查
 management:
@@ -38,7 +33,7 @@ management:
         include: "*"
   endpoint:
     health:
-      show-details: always
+      show-details: when_authorized
 
 
 sign_key: 12345678
@@ -47,4 +42,4 @@ dubbo:
   registry:
     address: spring-cloud://localhost
   cloud:
-    subscribed-services: stefanie-service-user
+    subscribed-services: stefanie-db-adpter

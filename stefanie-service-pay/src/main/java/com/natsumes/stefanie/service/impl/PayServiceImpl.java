@@ -11,10 +11,11 @@ import com.lly835.bestpay.model.PayResponse;
 import com.lly835.bestpay.service.BestPayService;
 import com.natsumes.stefanie.entity.Response;
 import com.natsumes.stefanie.enums.PayPlatformEnum;
-import com.natsumes.stefanie.mapper.PayInfoMapper;
 import com.natsumes.stefanie.pojo.PayInfo;
+import com.natsumes.stefanie.service.DubboPayInfoService;
 import com.natsumes.stefanie.service.PayService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,8 @@ public class PayServiceImpl implements PayService {
     @Autowired
     private BestPayService bestPayService;
 
-    @Autowired
-    private PayInfoMapper payInfoMapper;
+    @Reference
+    private DubboPayInfoService dubboPayInfoService;
 
     @Autowired
     private AmqpTemplate amqpTemplate;
@@ -39,7 +40,7 @@ public class PayServiceImpl implements PayService {
     @Override
     public Response<PayResponse> create(Integer userId, String orderId, String openId, BigDecimal amount, BestPayTypeEnum payTypeEnum) {
         //已存在, 查询
-        PayInfo payInfo = payInfoMapper.selectByByOrderNo(orderId);
+        PayInfo payInfo = dubboPayInfoService.selectByByOrderNo(orderId);
         if (payInfo == null) {
 
             //1. 写入数据库
@@ -49,7 +50,7 @@ public class PayServiceImpl implements PayService {
                     amount);
             payInfo.setUserId(userId);
 
-            payInfoMapper.insertSelective(payInfo);
+            dubboPayInfoService.insertSelective(payInfo);
         }
 
         if (payTypeEnum != BestPayTypeEnum.WXPAY_NATIVE
@@ -82,7 +83,7 @@ public class PayServiceImpl implements PayService {
 
         //2.金额校验（从数据库查订单）
         //比较严重（正常情况下是不会发生的）发出告警：钉钉、短信
-        PayInfo payInfo = payInfoMapper.selectByByOrderNo(response.getOrderId());
+        PayInfo payInfo = dubboPayInfoService.selectByByOrderNo(response.getOrderId());
         if (payInfo == null) {
             //todo:
             throw new RuntimeException("通过orderNo查询到的结果是null");
@@ -99,7 +100,7 @@ public class PayServiceImpl implements PayService {
             //3. 修改订单支付状态
             payInfo.setPlatformStatus(OrderStatusEnum.SUCCESS.name());
             payInfo.setPlatformNumber(response.getOutTradeNo());
-            payInfoMapper.updateByPrimaryKeySelective(payInfo);
+            dubboPayInfoService.updateByPrimaryKeySelective(payInfo);
         }
 
         //TODO totoro发送MQ消息，natsume接受MQ消息, payInfoVo
@@ -121,12 +122,12 @@ public class PayServiceImpl implements PayService {
 
     @Override
     public PayInfo queryByOrderId(String orderId) {
-        return payInfoMapper.selectByByOrderNo(orderId);
+        return dubboPayInfoService.selectByByOrderNo(orderId);
     }
 
     //查询订单接口
     private String query(String orderId, BestPayTypeEnum payTypeEnum) {
-        PayInfo payInfo = payInfoMapper.selectByByOrderNo(orderId);
+        PayInfo payInfo = dubboPayInfoService.selectByByOrderNo(orderId);
         if (payInfo != null) {
             OrderQueryRequest queryRequest = new OrderQueryRequest();
             queryRequest.setOrderId(orderId);

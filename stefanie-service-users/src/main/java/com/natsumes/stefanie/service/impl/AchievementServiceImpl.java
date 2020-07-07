@@ -7,11 +7,12 @@ import com.natsumes.stefanie.entity.vo.AchievementVo;
 import com.natsumes.stefanie.entity.vo.ProfitDetailVo;
 import com.natsumes.stefanie.entity.vo.ProfitVo;
 import com.natsumes.stefanie.enums.ProfitStatusEnum;
-import com.natsumes.stefanie.mapper.AchievementMapper;
 import com.natsumes.stefanie.pojo.Achievement;
 import com.natsumes.stefanie.service.AchievementService;
+import com.natsumes.stefanie.service.DubboAchievementService;
 import com.natsumes.stefanie.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,13 +25,13 @@ import java.util.stream.Collectors;
 @Service
 public class AchievementServiceImpl implements AchievementService {
 
-    @Autowired
-    private AchievementMapper achievementMapper;
+    @Reference
+    private DubboAchievementService dubboAchievementService;
 
     @Override
     public Response<AchievementVo> list(Integer uid) {
         AchievementVo achievementVo = new AchievementVo();
-        List<Achievement> achievements = achievementMapper.selectByUid(uid);
+        List<Achievement> achievements = dubboAchievementService.selectByUid(uid);
         achievements.forEach(achievement -> {
             if (DateUtils.isThisMonth(achievement.getStartTime())) {
                 achievementVo.updateProfit(achievement.getProfit(), achievement.getAchievement(),
@@ -49,7 +50,7 @@ public class AchievementServiceImpl implements AchievementService {
     @Override
     public Response<ProfitVo> profit(Integer uId) {
         ProfitVo profitVo = new ProfitVo();
-        List<Achievement> achievements = achievementMapper.selectByUid(uId);
+        List<Achievement> achievements = dubboAchievementService.selectByUid(uId);
         BigDecimal profit = BigDecimal.ZERO;
         BigDecimal validProfit = BigDecimal.ZERO;
         /**
@@ -88,7 +89,7 @@ public class AchievementServiceImpl implements AchievementService {
     public Response<PageInfo> detail(Integer uId, Integer pageNum, Integer pageSize) {
         //ProductDetailVo productDetailVo = new ProductDetailVo();
         PageHelper.startPage(pageNum, pageSize);
-        List<Achievement> achievements = achievementMapper.selectByUid(uId);
+        List<Achievement> achievements = dubboAchievementService.selectByUid(uId);
         PageInfo pageInfo = new PageInfo<>(achievements);
 
         List<ProfitDetailVo> profitDetailVos = achievements.stream()
