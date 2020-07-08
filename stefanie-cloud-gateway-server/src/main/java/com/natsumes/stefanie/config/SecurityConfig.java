@@ -41,7 +41,7 @@ import javax.sql.DataSource;
 public class SecurityConfig {
 
     private static final String[] AUTH_WHITELIST = new String[]{"/oauth/**", "/pay/**",
-            "/octopus/**", "/logistics/**", "/actuator/**"};
+            "/octopus/**", "/logistics/**", "/actuator/**", "/customer/**"};
 
     private static final String MAX_AGE = "18000L";
 

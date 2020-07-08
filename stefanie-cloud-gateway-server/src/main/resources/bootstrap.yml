@@ -21,17 +21,16 @@ spring:
         locator:
           enabled: true
       routes:
-        - id: service-user-router  # 我们⾃定义的路由 ID，保持唯⼀
-          uri: lb://stefanie-service-users # ⽬标服务地址 ⾃动投递微服务（部署多实例） 动态路由：uri配置的应该是⼀个服务名称，⽽不应该是⼀个具体的服务实例的地址
-          # gateway⽹关从服务注册中⼼获取实例信息然后负载后路由
-          predicates: # 断⾔：路由条件，Predicate 接受⼀个输⼊参数，返回⼀个布尔值结果。该接⼝包含多种默 认⽅法来将Predicate 组合成其他复杂的逻辑（⽐如：与，或，⾮）。
+        - id: service-user-router
+          uri: lb://stefanie-service-users
+          predicates:
             - Path=/user/**
           filters:
             - StripPrefix=1
         - id: service-logistics-router
           uri: lb://stefanie-service-logistics
           predicates:
-            - Path=/logistics/**
+            - Path=/store/**
           filters:
             - StripPrefix=1
         - id: service-pay-router
@@ -48,13 +47,15 @@ spring:
           uri: lb://stefanie-service-octopus
           predicates:
             - Path=/customer/**
-        - id: cloud-oauth-router
-          uri: lb://stefanie-cloud-oauth
-          predicates:
-            - Path=/oauth/token/**
         - id: service-octopus-router
           uri: lb://stefanie-service-octopus
           predicates:
             - Path=/octopus/**
+          filters:
+            - StripPrefix=1
+        - id: cloud-oauth-router
+          uri: lb://stefanie-cloud-oauth
+          predicates:
+            - Path=/oauth/**
 
 sign_key: 12345678

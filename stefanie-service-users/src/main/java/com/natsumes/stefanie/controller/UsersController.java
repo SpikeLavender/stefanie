@@ -18,7 +18,6 @@ import static com.natsumes.stefanie.consts.StefanieConst.CURRENT_USER;
 
 @RestController
 @Slf4j
-@RequestMapping("/user")
 public class UsersController {
 
     @Autowired

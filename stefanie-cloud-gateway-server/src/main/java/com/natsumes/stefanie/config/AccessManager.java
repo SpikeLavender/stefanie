@@ -41,11 +41,9 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
         permitAll.add("/logistics/**");
 
         permitAll.add("/actuator/**");
+
+        permitAll.add("/customer/**");
         //开放登陆和注册接口
-//        permitAll.add("/user/user/register");
-//        permitAll.add("/wxchart/**");
-//        permitAll.add("/logistics/**");
-//        permitAll.add("/pay/**");
     }
 
     @Override
