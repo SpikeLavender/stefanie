@@ -1,8 +1,13 @@
 package com.natsumes.stefanie.config;
 
+import com.natsumes.stefanie.filter.AuthorizationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +26,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.security.oauth2.server.resource.web.server.ServerBearerTokenAuthenticationConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.web.cors.reactive.CorsUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -33,6 +39,10 @@ import javax.sql.DataSource;
 @EnableWebFluxSecurity
 @Slf4j
 public class SecurityConfig {
+
+    private static final String[] AUTH_WHITELIST = new String[]{"/oauth/**", "/pay/**",
+            "/octopus/**", "/logistics/**", "/actuator/**", "/customer/**"};
+
     private static final String MAX_AGE = "18000L";
 
 
@@ -49,7 +59,6 @@ public class SecurityConfig {
      * 跨域配置
      */
     public WebFilter corsFilter() {
-        log.info("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
         return (ServerWebExchange ctx, WebFilterChain chain) -> {
             ServerHttpRequest request = ctx.getRequest();
             if (CorsUtils.isCorsRequest(request)) {
@@ -96,12 +105,11 @@ public class SecurityConfig {
         JwtAuthenticationManager jwtAuthenticationManager = new JwtAuthenticationManager(tokenStore());
         AuthenticationWebFilter authenticationWebFilter = new AuthenticationWebFilter(jwtAuthenticationManager);
         authenticationWebFilter.setServerAuthenticationConverter(new ServerBearerTokenAuthenticationConverter());
-
 //        http.authenticationManager(jwtAuthenticationManager);
         http.httpBasic().disable()
                 .csrf().disable()
                 .authorizeExchange()
-                .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                .pathMatchers(HttpMethod.OPTIONS, AUTH_WHITELIST).permitAll()
                 .anyExchange().access(accessManager)
                 .and()
                 .addFilterAt(corsFilter(), SecurityWebFiltersOrder.CORS)

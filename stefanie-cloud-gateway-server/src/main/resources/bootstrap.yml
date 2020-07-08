@@ -8,31 +8,29 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
-        # nacos config 配置
+        server-addr: ${NACOS_SERVER_ADDR}
+        namespace: ${NACOS_NAMESPACE}
       config:
-        server-addr: 127.0.0.1:8848
-        # 锁定server端的配置文件（读取它的配置项）
-        namespace: 7b456865-351d-404d-abef-fe7fc52a5e6b  # 命名空间id
-        group: DEFAULT_GROUP  # 默认分组就是DEFAULT_GROUP，如果使用默认分组可以不配置
-        file-extension: yaml   #默认properties
+        server-addr: ${NACOS_SERVER_ADDR}
+        namespace: ${NACOS_NAMESPACE}
+        group: DEFAULT_GROUP
+        file-extension: yaml
 
     gateway:
       discovery:
         locator:
           enabled: true
       routes:
-        - id: service-user-router  # 我们⾃定义的路由 ID，保持唯⼀
-          uri: lb://stefanie-service-user # ⽬标服务地址 ⾃动投递微服务（部署多实例） 动态路由：uri配置的应该是⼀个服务名称，⽽不应该是⼀个具体的服务实例的地址
-          # gateway⽹关从服务注册中⼼获取实例信息然后负载后路由
-          predicates: # 断⾔：路由条件，Predicate 接受⼀个输⼊参数，返回⼀个布尔值结果。该接⼝包含多种默 认⽅法来将Predicate 组合成其他复杂的逻辑（⽐如：与，或，⾮）。
+        - id: service-user-router
+          uri: lb://stefanie-service-users
+          predicates:
             - Path=/user/**
           filters:
             - StripPrefix=1
         - id: service-logistics-router
           uri: lb://stefanie-service-logistics
           predicates:
-            - Path=/logistics/**
+            - Path=/store/**
           filters:
             - StripPrefix=1
         - id: service-pay-router
@@ -49,9 +47,15 @@ spring:
           uri: lb://stefanie-service-octopus
           predicates:
             - Path=/customer/**
+        - id: service-octopus-router
+          uri: lb://stefanie-service-octopus
+          predicates:
+            - Path=/octopus/**
+          filters:
+            - StripPrefix=1
         - id: cloud-oauth-router
           uri: lb://stefanie-cloud-oauth
           predicates:
-            - Path=/oauth/token/**
+            - Path=/oauth/**
 
 sign_key: 12345678

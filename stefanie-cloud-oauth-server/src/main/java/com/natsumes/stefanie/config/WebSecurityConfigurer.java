@@ -47,6 +47,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         return NoOpPasswordEncoder.getInstance();
     }
 
+
     /**
      * 处理用户名和密码验证事宜
      * 1）客户端传递username和password参数到认证服务器
