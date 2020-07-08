@@ -72,7 +72,7 @@ public class AuthorizationServerConfigurer extends AuthorizationServerConfigurer
 //                .secret("abcxyz")                   // 指定客户端的密码/安全码
 //                .resourceIds("order")         // 指定客户端所能访问资源id清单，此处的资源id是需要在具体的资源服务器上也配置一样
 //                // 认证类型/令牌颁发模式，可以配置多个在这里，但是不一定都用，具体使用哪种方式颁发token，需要客户端调用的时候传递参数指定
-//                .authorizedGrantTypes("password","refresh_token")
+//                .authorizedGrantTypes("password","refresh_token", "authorization_code")
 //                // 客户端的权限范围，此处配置为all全部即可
 //                .scopes("all");
 
@@ -94,9 +94,10 @@ public class AuthorizationServerConfigurer extends AuthorizationServerConfigurer
                 .tokenServices(authorizationServerTokenServices())
                 .authenticationManager(authenticationManager)   // 指定认证管理器，随后注入一个到当前类使用即可
                 .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE);
+
     }
 
-    private TokenStore tokenStore() {
+    public TokenStore tokenStore() {
         return new JwtTokenStore(jwtAccessTokenConverter());
     }
 

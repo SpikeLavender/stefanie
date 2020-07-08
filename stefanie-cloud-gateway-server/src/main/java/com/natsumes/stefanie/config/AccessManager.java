@@ -1,5 +1,6 @@
 package com.natsumes.stefanie.config;
 
+import com.natsumes.stefanie.enums.GrantTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
@@ -26,13 +27,32 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
     private static final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     public AccessManager() {
+
+//        "/oauth/**", "/pay/**",
+//                "/octopus/**", "/logistics/**", "/actuator/**"
         permitAll.add("/");
         //oauth2服务器
-        permitAll.add("/**/oauth/**");
+        permitAll.add("/oauth/**");
+
+        permitAll.add("/pay/**");
+
+        permitAll.add("/octopus/**");
+
+        permitAll.add("/logistics/**");
+
+        permitAll.add("/actuator/**");
+        //开放登陆和注册接口
+//        permitAll.add("/user/user/register");
+//        permitAll.add("/wxchart/**");
+//        permitAll.add("/logistics/**");
+//        permitAll.add("/pay/**");
     }
 
     @Override
     public Mono<AuthorizationDecision> check(Mono<Authentication> mono, AuthorizationContext authorizationContext) {
+
+        log.info("authenticate start 授权");
+
         ServerWebExchange exchange = authorizationContext.getExchange();
 //        if (accessToken == null) {
 //            return Mono.just(new AuthorizationDecision(false));
@@ -41,9 +61,22 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
         //登陆接口的话，加一个返回用户信息
 
         String requestPath = exchange.getRequest().getURI().getPath();
+        //如果是登陆获取token
+//        if (antPathMatcher.match("/oauth/token", requestPath)) {
+//            MultiValueMap<String, String> queryParams = exchange.getRequest().getQueryParams();
+//            String grant_type = queryParams.getFirst("grant_type");
+////            if (GrantTypeEnum.WX.getType().equalsIgnoreCase(grant_type)) {
+////                //获取openId并放到username和password上
+////                String user_code = queryParams.getFirst("user_code");
+////                mono.doOnRequest(k->{}).then().doOnRequest()
+////            }
+//            List<String> grant_type1 = queryParams.get("grant_type");
+//            //queryParams.get("grant_type").add(0, "password");
+//        }
         if (permitAll(requestPath)) {
             return Mono.just(new AuthorizationDecision(true));
         }
+        //获取微信授权码
         return mono.map(auth -> new AuthorizationDecision(checkAuthorities(auth, requestPath)))
                 .defaultIfEmpty(new AuthorizationDecision(false));
     }

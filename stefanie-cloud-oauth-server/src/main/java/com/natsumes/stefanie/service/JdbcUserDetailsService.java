@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.common.util.OAuth2Utils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,5 +29,10 @@ public class JdbcUserDetailsService implements UserDetailsService {
         log.info("ssssssssss{}", users.getUsername());
 
         return new User(users.getUsername(), users.getPassword(), new ArrayList<>());
+    }
+
+    public static void main(String[] args) {
+        String abcxyz = new BCryptPasswordEncoder().encode("abcxyz");
+        System.out.println(abcxyz);
     }
 }

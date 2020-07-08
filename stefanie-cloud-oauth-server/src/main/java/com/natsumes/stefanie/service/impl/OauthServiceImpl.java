@@ -1,17 +1,18 @@
 package com.natsumes.stefanie.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.natsumes.stefanie.config.WxConfig;
 import com.natsumes.stefanie.entity.Response;
-import com.natsumes.stefanie.entity.form.WeChartForm;
+import com.natsumes.stefanie.entity.form.UserRegisterForm;
 import com.natsumes.stefanie.enums.ResponseEnum;
 import com.natsumes.stefanie.enums.RoleEnum;
 import com.natsumes.stefanie.pojo.Users;
 import com.natsumes.stefanie.service.DubboUsersService;
-import com.natsumes.stefanie.service.UserService;
+import com.natsumes.stefanie.service.OauthService;
 import com.natsumes.stefanie.utils.JSONUtils;
 import org.apache.dubbo.config.annotation.Reference;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,34 +21,38 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-
 
 @Service
-public class UserServiceImpl implements UserService {
+public class OauthServiceImpl implements OauthService {
 
-    @Reference
-    private DubboUsersService dubboUsersService;
+    @Value("wx.openIdUrl")
+    private String openIdUrl;
 
-    @Autowired
-    private WxConfig wxConfig;
+    @Value("${wx.appId}")
+    private String appId;
+
+    @Value("${wx.mchKey")
+    private String mchKey;
 
     @Autowired
     private RestTemplate restTemplate;
 
+    @Reference
+    private DubboUsersService dubboUsersService;
+
     @Override
-    public Response<Users> register(Users users) {
+    public Response register(UserRegisterForm userRegisterForm) {
+
+        Users users = new Users();
+        BeanUtils.copyProperties(userRegisterForm, users);
+
         //username 不能重复
         int countByUsername = dubboUsersService.countByUsername(users.getUsername());
         if (countByUsername > 0) {
             return Response.error(ResponseEnum.USERNAME_EXIST);
         }
 
-        //email 不能重复
-//		int countByEmail = userMapper.countByEmail(users.getEmail());
-//		if (countByEmail > 0) {
-//			return ResponseVo.error(EMAIL_EXIST);
-//		}
+        //todo:放到登陆页面而不是注册页面
 
         //检验推广父id是否有效
         if (users.getParentId() == null) {
@@ -71,8 +76,6 @@ public class UserServiceImpl implements UserService {
         return Response.success();
     }
 
-    //cookie 跨域
-    //todo: session保存在内存里, 改进版本: token+redis
     @Override
     public Response<Users> login(String username, String password) {
         Users users = dubboUsersService.selectByUsername(username);
@@ -86,17 +89,19 @@ public class UserServiceImpl implements UserService {
         }
 
         users.setPassword("");
-
+        users.setOpenid("");
         return Response.success(users);
     }
 
+    /**
+     * 微信登陆
+     * @param userCode
+     * @return
+     */
     @Override
-    public Response<Users> wxLogin(WeChartForm weChartForm) {
-
-
-        String url = wxConfig.getOpenIdUrl() + "?appid=" + wxConfig.getAppId()
-                + "&secret=" + wxConfig.getMchKey() + "&js_code="
-                + weChartForm.getUserCode() + "&grant_type=authorization_code";
+    public Response<Users> wxLogin(String userCode) {
+        String url = openIdUrl + "?appid=" + appId + "&secret=" + mchKey + "&js_code="
+                + userCode + "&grant_type=authorization_code";
 
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
 
@@ -118,10 +123,10 @@ public class UserServiceImpl implements UserService {
             users.setRole(RoleEnum.CUSTOMER.getCode());
             //MD5摘要算法(Spring 自带)
             //存储sessionKey
-            users.setPassword(sessionKey);
+            users.setPassword(openId); //传送给前端，用一定的加密算法
             users.setParentId(0);
-            users.setUsername(weChartForm.getUsername());
-            users.setOpenid(openId);
+            users.setUsername(openId);
+            users.setOpenid(sessionKey);
 
             //写入数据库
             int resultCount = dubboUsersService.insertSelective(users);
@@ -130,60 +135,11 @@ public class UserServiceImpl implements UserService {
             }
         } else {
             //更新sessionKey
-            users.setPassword(sessionKey);
-            users.setUsername(weChartForm.getUsername());
+            users.setPassword(openId); //到时候做加密
+            users.setOpenid(sessionKey);
+            users.setUsername(openId);
             dubboUsersService.updateByPrimaryKey(users);
         }
         return Response.success(users);
-    }
-
-    @Override
-    public Response blind(Integer uid, Integer parentId) {
-        if (parentId == 0) {
-            return Response.success();
-        }
-
-        //判断此用户是否绑定不为0的父Id
-        Users user = dubboUsersService.selectByPrimaryKey(uid);
-        //已绑定，直接返回已绑定
-        if (user.getParentId() != 0) {
-            return Response.error(ResponseEnum.PARENT_HAS_EXIST);
-        }
-
-        //未绑定
-        // 去查parentId是不是不为0且不存在数据库中
-        if (dubboUsersService.countById(parentId) <= 0) {
-            // 是，返回，此父Id错误
-            return Response.error(ResponseEnum.PARENT_NO_EXIST);
-        }
-        // 去查parentId是不是不为此用户的子Id
-        List<Users> users = dubboUsersService.selectAll();
-        if (isSubId(users, uid, parentId)) {
-            // 是，返回，此ID是你的下级，不能绑定
-            return Response.error(ResponseEnum.PARENT_IS_NOT_VALID);
-        }
-
-        //否，绑定，0 -> 绑定0
-        user.setParentId(parentId);
-        int i = dubboUsersService.updateByPrimaryKeySelective(user);
-        if (i <= 0) {
-            return Response.error(ResponseEnum.SYSTEM_ERROR);
-        }
-        //返回成功
-        return Response.success();
-    }
-
-    private boolean isSubId(List<Users> users, Integer uId, Integer parentId) {
-        for (Users user : users) {
-            if (!user.getId().equals(parentId)) {
-                continue;
-            }
-            if (user.getParentId().equals(uId)) {
-                return true;
-            } else {
-                return isSubId(users, uId, user.getParentId());
-            }
-        }
-        return false;
     }
 }

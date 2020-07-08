@@ -1,5 +1,6 @@
 package com.natsumes.stefanie.config;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
@@ -17,6 +18,12 @@ public class StefanieAccessTokenConverter extends DefaultAccessTokenConverter {
         // 获取到request对象
         HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
         // 获取客户端ip（注意：如果是经过代理之后到达当前服务的话，那么这种方式获取的并不是真实的浏览器客户端ip）
+        // 获取认证方式
+
+        SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+
+
         String remoteAddr = request.getRemoteAddr();
         Map<String, String> stringMap = (Map<String, String>) super.convertAccessToken(token, authentication);
         stringMap.put("clientIp",remoteAddr);
